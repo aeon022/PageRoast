@@ -1,7 +1,7 @@
 'use strict';
 
 // ── Config ────────────────────────────────────────────────────────
-const GEMINI_MODEL  = 'gemini-2.0-flash';
+const GEMINI_MODEL  = 'gemini-1.5-flash';
 const GEMINI_URL    = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 const DONATION_URL  = 'https://buy.polar.sh/polar_cl_SLGA6JjOHJqu1vgwar0HrfXFkMMNZsKh1PMWP1zjO3P';
 
