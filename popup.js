@@ -1,8 +1,8 @@
 'use strict';
 
 // ── Config ────────────────────────────────────────────────────────
-const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL         = 'claude-haiku-4-5-20251001';
+const GEMINI_MODEL  = 'gemini-2.0-flash';
+const GEMINI_URL    = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 const DONATION_URL  = 'https://buy.polar.sh/polar_cl_SLGA6JjOHJqu1vgwar0HrfXFkMMNZsKh1PMWP1zjO3P';
 
 const SYSTEM_PROMPTS = {
@@ -25,7 +25,7 @@ Compare everything to the good old days. Be genuinely baffled. No bullet points.
 };
 
 // ── State ─────────────────────────────────────────────────────────
-let apiKey     = '';
+let apiKey     = '';   // Google Gemini API key
 let roastStyle = 'savage';
 let lastRoast  = '';
 let view       = 'main';
@@ -134,19 +134,13 @@ async function doRoast() {
   const userMsg = `Title: ${scraped.title}\nURL: ${scraped.url}\n\nContent:\n${scraped.text}`;
 
   try {
-    const res  = await fetch(ANTHROPIC_URL, {
+    const res  = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
       method: 'POST',
-      headers: {
-        'Content-Type':    'application/json',
-        'x-api-key':       apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model:      MODEL,
-        max_tokens: 300,
-        system:     SYSTEM_PROMPTS[roastStyle] ?? SYSTEM_PROMPTS.savage,
-        messages:   [{ role: 'user', content: userMsg }],
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPTS[roastStyle] ?? SYSTEM_PROMPTS.savage }] },
+        contents: [{ parts: [{ text: userMsg }] }],
+        generationConfig: { maxOutputTokens: 300 },
       }),
     });
 
@@ -156,7 +150,7 @@ async function doRoast() {
     }
 
     const data = await res.json();
-    lastRoast  = data.content?.[0]?.text?.trim() ?? '';
+    lastRoast  = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
     showRoast(lastRoast, scraped.title);
 
   } catch (err) {

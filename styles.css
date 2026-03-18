@@ -154,16 +154,25 @@ body {
 .btn-secondary:hover { background: #2e2e2e; }
 
 /* ── Donate ──────────────────────────────────────────────── */
-.donate-strip {
-  text-align: center;
-  padding-bottom: 4px;
-}
-.donate-link {
-  font-size: 11px;
+.btn-donate {
+  display: block;
+  width: 100%;
+  padding: 9px;
+  background: var(--bg3);
+  border: 1px solid #333;
+  border-radius: var(--radius);
   color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
   text-decoration: none;
+  transition: all 0.15s;
 }
-.donate-link:hover { color: var(--accent2); }
+.btn-donate:hover {
+  border-color: var(--accent2);
+  color: var(--accent2);
+  background: #1e1a16;
+}
 
 /* ── Settings ────────────────────────────────────────────── */
 #view-settings { padding: 14px; display: flex; flex-direction: column; gap: 16px; }
