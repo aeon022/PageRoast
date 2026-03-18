@@ -1,8 +1,8 @@
 'use strict';
 
 // ── Config ────────────────────────────────────────────────────────
-const GEMINI_MODEL  = 'gemini-1.5-flash';
-const GEMINI_URL    = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const GEMINI_BASE   = 'https://generativelanguage.googleapis.com/v1beta/models';
+const DEFAULT_MODEL = 'gemini-2.5-flash';
 const DONATION_URL  = 'https://buy.polar.sh/polar_cl_SLGA6JjOHJqu1vgwar0HrfXFkMMNZsKh1PMWP1zjO3P';
 
 const SYSTEM_PROMPTS = {
@@ -25,7 +25,8 @@ Compare everything to the good old days. Be genuinely baffled. No bullet points.
 };
 
 // ── State ─────────────────────────────────────────────────────────
-let apiKey     = '';   // Google Gemini API key
+let apiKey     = '';
+let geminiModel = DEFAULT_MODEL;
 let roastStyle = 'savage';
 let lastRoast  = '';
 let view       = 'main';
@@ -41,14 +42,16 @@ const elBtnSettings  = document.getElementById('btn-settings');
 const elBtnSave      = document.getElementById('btn-save-settings');
 const elViewMain     = document.getElementById('view-main');
 const elViewSettings = document.getElementById('view-settings');
-const elApiKeyInput  = document.getElementById('input-apikey');
+const elApiKeyInput   = document.getElementById('input-apikey');
+const elModelInput    = document.getElementById('input-model');
 const elDonate       = document.getElementById('btn-donate');
 
 // ── Init ──────────────────────────────────────────────────────────
 async function init() {
-  const data = await chrome.storage.local.get(['apiKey', 'roastStyle']);
-  apiKey     = data.apiKey     || '';
-  roastStyle = data.roastStyle || 'savage';
+  const data  = await chrome.storage.local.get(['apiKey', 'roastStyle', 'geminiModel']);
+  apiKey      = data.apiKey      || '';
+  roastStyle  = data.roastStyle  || 'savage';
+  geminiModel = data.geminiModel || DEFAULT_MODEL;
   elDonate.href = DONATION_URL;
   syncStylePicker();
 }
@@ -60,6 +63,7 @@ function showView(v) {
   elViewSettings.classList.toggle('hidden', v !== 'settings');
   if (v === 'settings') {
     elApiKeyInput.value = apiKey;
+    elModelInput.value  = geminiModel;
     syncStylePicker();
   }
 }
@@ -69,8 +73,9 @@ elBtnSettings.addEventListener('click', () => {
 });
 
 elBtnSave.addEventListener('click', async () => {
-  apiKey     = elApiKeyInput.value.trim();
-  await chrome.storage.local.set({ apiKey, roastStyle });
+  apiKey      = elApiKeyInput.value.trim();
+  geminiModel = elModelInput.value.trim() || DEFAULT_MODEL;
+  await chrome.storage.local.set({ apiKey, roastStyle, geminiModel });
   showView('main');
   if (apiKey) toast('Settings saved');
   else toast('API key missing', 'error');
@@ -134,7 +139,7 @@ async function doRoast() {
   const userMsg = `Title: ${scraped.title}\nURL: ${scraped.url}\n\nContent:\n${scraped.text}`;
 
   try {
-    const res  = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
+    const res  = await fetch(`${GEMINI_BASE}/${geminiModel}:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
