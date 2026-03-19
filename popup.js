@@ -119,34 +119,24 @@ async function doRoast() {
     [scraped]   = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: () => {
-        // Meta description — compact summary of the page
+        // Meta description
         const metaDesc = document.querySelector('meta[name="description"]')?.content
           || document.querySelector('meta[property="og:description"]')?.content
           || '';
 
-        // innerText on the LIVE body — respects CSS, gives exactly what the user sees
-        // Filter out very short lines (nav links, buttons, labels) and duplicates
-        const seen = new Set();
-        const lines = document.body.innerText
-          .split('\n')
-          .map(l => l.trim())
-          .filter(l => {
-            if (l.length < 25) return false;        // skip nav/button fragments
-            if (seen.has(l)) return false;           // skip duplicates
-            seen.add(l);
-            return true;
-          });
+        // Get all visible text — innerText respects CSS, no filtering, let the model handle the noise
+        const bodyText = (document.body.innerText || document.body.textContent || '')
+          .replace(/[ \t]+/g, ' ')       // collapse horizontal whitespace
+          .replace(/\n{3,}/g, '\n\n')    // collapse excessive blank lines
+          .trim();
 
-        const combined = [metaDesc, ...lines]
-          .join(' ')
-          .replace(/\s+/g, ' ')
-          .trim()
-          .slice(0, 4000);
+        const combined = (metaDesc ? metaDesc + '\n\n' : '') + bodyText;
+        const text = combined.slice(0, 5000);
 
         return {
           title: document.title.trim(),
           url:   location.href,
-          text:  combined,
+          text,
         };
       },
     });
