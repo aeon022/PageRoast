@@ -126,24 +126,34 @@ async function doRoast() {
           || document.querySelector('meta[property="og:description"]')?.content
           || '';
 
-        // All headings (great for news homepages — many article titles)
+        // All headings — great for news homepages (many article titles)
         const headings = [...document.querySelectorAll('h1, h2, h3')]
-          .map(el => txt(el)).filter(Boolean).join(' | ');
+          .map(el => txt(el)).filter(t => t.length > 5).slice(0, 40).join(' | ');
 
-        // For article pages: grab article body paragraphs
-        const articleText = [...document.querySelectorAll('article p, main p, [role="main"] p')]
-          .map(el => txt(el)).filter(t => t.length > 40).slice(0, 20).join(' ');
+        // Article body: semantic <p> first, then div-based content (CNN-style)
+        const articleSelectors = [
+          'article p', 'main p', '[role="main"] p',
+          '[class*="article"] p', '[class*="story"] p', '[class*="body"] p',
+          '[class*="content"] p', '[class*="text"] p',
+        ];
+        const articleText = [...document.querySelectorAll(articleSelectors.join(','))]
+          .map(el => txt(el))
+          .filter(t => t.length > 40)
+          .slice(0, 25)
+          .join(' ');
 
         // Fallback: full body minus pure noise
         const clone = document.body.cloneNode(true);
         ['script','style','noscript','nav','footer','aside',
          '[aria-hidden="true"]','[role="navigation"]','[role="banner"]',
-         '.cookie','[class*="cookie"]','[class*="consent"]','[class*="banner"]',
-         '[class*="newsletter"]','[class*="paywall"]'].forEach(s =>
-          clone.querySelectorAll(s).forEach(el => el.remove()));
+         '[class*="cookie"]','[class*="consent"]','[class*="gdpr"]',
+         '[class*="banner"]','[class*="newsletter"]','[class*="paywall"]',
+         '[class*="subscribe"]','[class*="promo"]','[class*="ad-"]',
+         '[class*="-ad"]','[id*="ad-"]'].forEach(s =>
+          clone.querySelectorAll(s).forEach(el => { try { el.remove(); } catch {} }));
         const body = txt(clone);
 
-        // Combine: meta + headings + article paragraphs (or body fallback)
+        // Combine: meta + headings + article text (or body fallback)
         const combined = [metaDesc, headings, articleText || body]
           .join(' ')
           .replace(/\s+/g, ' ')
