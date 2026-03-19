@@ -6,37 +6,29 @@ const DEFAULT_MODEL = 'gemini-2.5-flash';
 const DONATION_URL  = 'https://buy.polar.sh/polar_cl_SLGA6JjOHJqu1vgwar0HrfXFkMMNZsKh1PMWP1zjO3P';
 
 const SYSTEM_PROMPTS = {
-  savage: `You are a savage stand-up comedian writing one-liner jokes about websites.
-You will receive a page title, URL, and whatever content is available.
-Write ONE sharp, funny sentence about this specific website — use the title, URL, content, or any combination.
-Even if content is minimal, the URL and title alone are enough for a great joke.
-Output only the joke. No intro, no explanation.`,
+  savage: `You are a savage stand-up comedian. Write ONE sharp, funny one-liner about the website below.
+Use anything: the name, the URL, what they sell, their headlines, their claims. Be specific and merciless.
+Reply with just the one-liner. Nothing else.`,
 
-  british: `You are a dry, deadpan British comedian writing one-liner jokes about websites.
-You will receive a page title, URL, and whatever content is available.
-Write ONE politely devastating sentence about this specific website — use the title, URL, content, or any combination.
-Even if content is minimal, the URL and title alone are enough for a great joke.
-Output only the joke. No intro, no explanation.`,
+  british: `You are a dry British comedian. Write ONE politely devastating one-liner about the website below.
+Use anything: the name, the URL, what they do, their headlines. Be specific and understated.
+Reply with just the one-liner. Nothing else.`,
 
-  philosopher: `You are a world-weary philosopher writing one-liner jokes about websites.
-You will receive a page title, URL, and whatever content is available.
-Write ONE darkly funny existential sentence about this specific website — use the title, URL, content, or any combination.
-Even if content is minimal, the URL and title alone are enough for a great joke.
-Output only the joke. No intro, no explanation.`,
+  philosopher: `You are a world-weary philosopher. Write ONE darkly funny existential one-liner about the website below.
+Use anything: the name, the URL, what they do, their content. Be specific.
+Reply with just the one-liner. Nothing else.`,
 
-  boomer: `You are a confused Baby Boomer writing one-liner jokes about websites.
-You will receive a page title, URL, and whatever content is available.
-Write ONE baffled, old-fashioned sentence about this specific website — use the title, URL, content, or any combination.
-Even if content is minimal, the URL and title alone are enough for a great joke.
-Output only the joke. No intro, no explanation.`,
+  boomer: `You are a confused Baby Boomer. Write ONE baffled one-liner about the website below.
+Compare it to the old days. Use the name, URL, what they do. Be specific.
+Reply with just the one-liner. Nothing else.`,
 };
 
 // ── State ─────────────────────────────────────────────────────────
-let apiKey     = '';
+let apiKey      = '';
 let geminiModel = DEFAULT_MODEL;
-let roastStyle = 'savage';
-let lastRoast  = '';
-let view       = 'main';
+let roastStyle  = 'savage';
+let lastRoast   = '';
+let view        = 'main';
 
 // ── DOM ───────────────────────────────────────────────────────────
 const elRoastOutput  = document.getElementById('roast-output');
@@ -49,8 +41,8 @@ const elBtnSettings  = document.getElementById('btn-settings');
 const elBtnSave      = document.getElementById('btn-save-settings');
 const elViewMain     = document.getElementById('view-main');
 const elViewSettings = document.getElementById('view-settings');
-const elApiKeyInput   = document.getElementById('input-apikey');
-const elModelInput    = document.getElementById('input-model');
+const elApiKeyInput  = document.getElementById('input-apikey');
+const elModelInput   = document.getElementById('input-model');
 const elDonate       = document.getElementById('btn-donate');
 
 // ── Init ──────────────────────────────────────────────────────────
@@ -75,24 +67,20 @@ function showView(v) {
   }
 }
 
-elBtnSettings.addEventListener('click', () => {
-  showView(view === 'settings' ? 'main' : 'settings');
-});
+elBtnSettings.addEventListener('click', () => showView(view === 'settings' ? 'main' : 'settings'));
 
 elBtnSave.addEventListener('click', async () => {
   apiKey      = elApiKeyInput.value.trim();
   geminiModel = elModelInput.value.trim() || DEFAULT_MODEL;
   await chrome.storage.local.set({ apiKey, roastStyle, geminiModel });
   showView('main');
-  if (apiKey) toast('Settings saved');
-  else toast('API key missing', 'error');
+  toast(apiKey ? 'Settings saved' : 'API key missing', apiKey ? 'success' : 'error');
 });
 
 // ── Style picker ──────────────────────────────────────────────────
 function syncStylePicker() {
-  document.querySelectorAll('.style-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.style === roastStyle);
-  });
+  document.querySelectorAll('.style-btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.style === roastStyle));
 }
 
 document.getElementById('style-picker').addEventListener('click', e => {
@@ -101,6 +89,35 @@ document.getElementById('style-picker').addEventListener('click', e => {
   roastStyle = btn.dataset.style;
   syncStylePicker();
 });
+
+// ── Scrape ────────────────────────────────────────────────────────
+function scrapePage() {
+  try {
+    const meta = document.querySelector('meta[name="description"]')?.content
+      || document.querySelector('meta[property="og:description"]')?.content
+      || '';
+
+    // innerText gives rendered visible text on any fully-loaded page
+    let body = document.body.innerText || '';
+
+    // fallback: textContent if innerText is suspiciously empty
+    if (body.trim().length < 100) {
+      const clone = document.body.cloneNode(true);
+      clone.querySelectorAll('script, style, noscript').forEach(el => el.remove());
+      body = clone.textContent || '';
+    }
+
+    const text = (meta + '\n' + body)
+      .replace(/[ \t]{2,}/g, ' ')
+      .replace(/\n{4,}/g, '\n\n')
+      .trim()
+      .slice(0, 5000);
+
+    return { title: document.title || '', url: location.href, text };
+  } catch (e) {
+    return { title: document.title || '', url: location.href, text: '' };
+  }
+}
 
 // ── Roast ─────────────────────────────────────────────────────────
 elBtnRoast.addEventListener('click', doRoast);
@@ -116,64 +133,36 @@ async function doRoast() {
   setLoading(true);
   elActionRow.classList.add('hidden');
 
-  // Scrape page
-  let scraped;
+  // Scrape page via content script
+  let scraped = null;
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    [scraped]   = await chrome.scripting.executeScript({
+    const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: async () => {
-        const clean = s => (s || '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
-
-        const metaDesc = document.querySelector('meta[name="description"]')?.content
-          || document.querySelector('meta[property="og:description"]')?.content
-          || '';
-
-        // Level 1: innerText — respects CSS, works for fully rendered pages
-        let bodyText = clean(document.body.innerText);
-
-        // Level 2: textContent with noise stripped — catches CSS-hidden content
-        if (bodyText.length < 400) {
-          const clone = document.body.cloneNode(true);
-          clone.querySelectorAll('script,style,noscript,svg,canvas').forEach(el => el.remove());
-          bodyText = clean(clone.textContent) || bodyText;
-        }
-
-        // Level 3: fetch the raw HTML and parse it — catches SPA shells where DOM is sparse
-        if (bodyText.length < 400) {
-          try {
-            const res  = await fetch(location.href);
-            const html = await res.text();
-            const doc  = new DOMParser().parseFromString(html, 'text/html');
-            doc.querySelectorAll('script,style,noscript').forEach(el => el.remove());
-            bodyText = clean(doc.body?.innerText || doc.body?.textContent) || bodyText;
-          } catch {}
-        }
-
-        const combined = (metaDesc ? metaDesc + '\n\n' : '') + bodyText;
-        return {
-          title: document.title.trim(),
-          url:   location.href,
-          text:  combined.slice(0, 5000),
-        };
-      },
+      func: scrapePage,
     });
-    scraped = scraped.result;
-  } catch {
+    scraped = results?.[0]?.result ?? null;
+  } catch (e) {
     setLoading(false);
-    toast('Could not read this page', 'error');
+    toast('Cannot read this page', 'error');
     return;
   }
 
-  // Build prompt
-  const userMsg = `Title: ${scraped.title}\nURL: ${scraped.url}\n\nContent:\n${scraped.text}`;
+  if (!scraped || !scraped.url) {
+    setLoading(false);
+    toast('Cannot read this page', 'error');
+    return;
+  }
+
+  // Build prompt — even title + URL alone is enough for a joke
+  const userMsg = `Website: ${scraped.title}\nURL: ${scraped.url}\n\n${scraped.text}`.trim();
 
   try {
-    const res  = await fetch(`${GEMINI_BASE}/${geminiModel}:generateContent?key=${apiKey}`, {
+    const res = await fetch(`${GEMINI_BASE}/${geminiModel}:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPTS[roastStyle] ?? SYSTEM_PROMPTS.savage }] },
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPTS[roastStyle] }] },
         contents: [{ parts: [{ text: userMsg }] }],
         generationConfig: { maxOutputTokens: 150 },
         safetySettings: [
@@ -191,18 +180,27 @@ async function doRoast() {
     }
 
     const data = await res.json();
-    console.log('[PageRoast] scraped length:', scraped.text.length, '| Gemini response:', JSON.stringify(data).slice(0, 300));
 
-    const blocked = data.promptFeedback?.blockReason;
-    if (blocked) throw new Error(`Blocked: ${blocked}`);
+    // Detect safety block
+    if (data.promptFeedback?.blockReason) {
+      throw new Error(`Blocked: ${data.promptFeedback.blockReason}`);
+    }
 
-    lastRoast = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
-    if (!lastRoast) throw new Error('No response from model');
+    // Detect empty candidate (e.g. finishReason: SAFETY)
+    const candidate = data.candidates?.[0];
+    if (!candidate?.content) {
+      const reason = candidate?.finishReason || 'unknown';
+      throw new Error(`No output (${reason})`);
+    }
+
+    lastRoast = candidate.content.parts?.[0]?.text?.trim() ?? '';
+    if (!lastRoast) throw new Error('Empty response');
+
     showRoast(lastRoast, scraped.title);
 
   } catch (err) {
     setLoading(false);
-    toast(err.message.slice(0, 60), 'error');
+    toast(err.message.slice(0, 70), 'error');
   }
 }
 
@@ -248,7 +246,7 @@ function toast(msg, type = 'success') {
   el.textContent = msg;
   el.className   = `toast toast--${type} toast--visible`;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('toast--visible'), 2200);
+  toastTimer = setTimeout(() => el.classList.remove('toast--visible'), 3500);
 }
 
 init();
