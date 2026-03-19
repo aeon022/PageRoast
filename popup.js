@@ -119,42 +119,25 @@ async function doRoast() {
     [scraped]   = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: () => {
-        const txt = el => (el?.innerText || el?.textContent || '').replace(/\s+/g, ' ').trim();
-
-        // Meta description
+        // Meta description — compact summary of the page
         const metaDesc = document.querySelector('meta[name="description"]')?.content
           || document.querySelector('meta[property="og:description"]')?.content
           || '';
 
-        // All headings — great for news homepages (many article titles)
-        const headings = [...document.querySelectorAll('h1, h2, h3')]
-          .map(el => txt(el)).filter(t => t.length > 5).slice(0, 40).join(' | ');
+        // innerText on the LIVE body — respects CSS, gives exactly what the user sees
+        // Filter out very short lines (nav links, buttons, labels) and duplicates
+        const seen = new Set();
+        const lines = document.body.innerText
+          .split('\n')
+          .map(l => l.trim())
+          .filter(l => {
+            if (l.length < 25) return false;        // skip nav/button fragments
+            if (seen.has(l)) return false;           // skip duplicates
+            seen.add(l);
+            return true;
+          });
 
-        // Article body: semantic <p> first, then div-based content (CNN-style)
-        const articleSelectors = [
-          'article p', 'main p', '[role="main"] p',
-          '[class*="article"] p', '[class*="story"] p', '[class*="body"] p',
-          '[class*="content"] p', '[class*="text"] p',
-        ];
-        const articleText = [...document.querySelectorAll(articleSelectors.join(','))]
-          .map(el => txt(el))
-          .filter(t => t.length > 40)
-          .slice(0, 25)
-          .join(' ');
-
-        // Fallback: full body minus pure noise
-        const clone = document.body.cloneNode(true);
-        ['script','style','noscript','nav','footer','aside',
-         '[aria-hidden="true"]','[role="navigation"]','[role="banner"]',
-         '[class*="cookie"]','[class*="consent"]','[class*="gdpr"]',
-         '[class*="banner"]','[class*="newsletter"]','[class*="paywall"]',
-         '[class*="subscribe"]','[class*="promo"]','[class*="ad-"]',
-         '[class*="-ad"]','[id*="ad-"]'].forEach(s =>
-          clone.querySelectorAll(s).forEach(el => { try { el.remove(); } catch {} }));
-        const body = txt(clone);
-
-        // Combine: meta + headings + article text (or body fallback)
-        const combined = [metaDesc, headings, articleText || body]
+        const combined = [metaDesc, ...lines]
           .join(' ')
           .replace(/\s+/g, ' ')
           .trim()
