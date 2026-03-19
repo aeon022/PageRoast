@@ -119,30 +119,32 @@ async function doRoast() {
     [scraped]   = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: () => {
-        const get = sel => [...document.querySelectorAll(sel)]
-          .map(el => el.innerText || el.textContent || '').join(' ');
+        const txt = el => (el?.innerText || el?.textContent || '').replace(/\s+/g, ' ').trim();
 
-        // Meta description as bonus context
+        // Meta description
         const metaDesc = document.querySelector('meta[name="description"]')?.content
           || document.querySelector('meta[property="og:description"]')?.content
           || '';
 
-        // Headings — always informative
-        const headings = get('h1, h2, h3');
+        // All headings (great for news homepages — many article titles)
+        const headings = [...document.querySelectorAll('h1, h2, h3')]
+          .map(el => txt(el)).filter(Boolean).join(' | ');
 
-        // Main content areas (prefer semantic elements)
-        const main = get('main, article, [role="main"], section');
+        // For article pages: grab article body paragraphs
+        const articleText = [...document.querySelectorAll('article p, main p, [role="main"] p')]
+          .map(el => txt(el)).filter(t => t.length > 40).slice(0, 20).join(' ');
 
         // Fallback: full body minus pure noise
         const clone = document.body.cloneNode(true);
         ['script','style','noscript','nav','footer','aside',
-         '[aria-hidden="true"]','[role="navigation"]',
-         '[role="banner"]'].forEach(s =>
+         '[aria-hidden="true"]','[role="navigation"]','[role="banner"]',
+         '.cookie','[class*="cookie"]','[class*="consent"]','[class*="banner"]',
+         '[class*="newsletter"]','[class*="paywall"]'].forEach(s =>
           clone.querySelectorAll(s).forEach(el => el.remove()));
-        const body = (clone.innerText || clone.textContent || '');
+        const body = txt(clone);
 
-        // Combine: headings first, then main, then body fallback
-        const combined = [metaDesc, headings, main || body]
+        // Combine: meta + headings + article paragraphs (or body fallback)
+        const combined = [metaDesc, headings, articleText || body]
           .join(' ')
           .replace(/\s+/g, ' ')
           .trim()
