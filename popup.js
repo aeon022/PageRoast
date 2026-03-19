@@ -119,15 +119,39 @@ async function doRoast() {
     [scraped]   = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: () => {
+        const get = sel => [...document.querySelectorAll(sel)]
+          .map(el => el.innerText || el.textContent || '').join(' ');
+
+        // Meta description as bonus context
+        const metaDesc = document.querySelector('meta[name="description"]')?.content
+          || document.querySelector('meta[property="og:description"]')?.content
+          || '';
+
+        // Headings — always informative
+        const headings = get('h1, h2, h3');
+
+        // Main content areas (prefer semantic elements)
+        const main = get('main, article, [role="main"], section');
+
+        // Fallback: full body minus pure noise
         const clone = document.body.cloneNode(true);
-        ['script','style','nav','header','footer','aside',
-         '[aria-hidden="true"]'].forEach(s =>
+        ['script','style','noscript','nav','footer','aside',
+         '[aria-hidden="true"]','[role="navigation"]',
+         '[role="banner"]'].forEach(s =>
           clone.querySelectorAll(s).forEach(el => el.remove()));
+        const body = (clone.innerText || clone.textContent || '');
+
+        // Combine: headings first, then main, then body fallback
+        const combined = [metaDesc, headings, main || body]
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 4000);
+
         return {
           title: document.title.trim(),
           url:   location.href,
-          text:  (clone.innerText || clone.textContent || '')
-                   .replace(/\s+/g, ' ').trim().slice(0, 4000),
+          text:  combined,
         };
       },
     });
