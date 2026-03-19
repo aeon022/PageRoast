@@ -6,25 +6,29 @@ const DEFAULT_MODEL = 'gemini-2.5-flash';
 const DONATION_URL  = 'https://buy.polar.sh/polar_cl_SLGA6JjOHJqu1vgwar0HrfXFkMMNZsKh1PMWP1zjO3P';
 
 const SYSTEM_PROMPTS = {
-  savage: `You are a savage stand-up comedian roasting websites.
-Read the page content carefully. Find something specific — an actual claim, product, headline, phrase, or topic on this page — and write ONE sharp, funny joke about it.
-The joke must reference something real from the content. No generic "this website" jokes.
-Output only the joke. Nothing else.`,
+  savage: `You are a savage stand-up comedian writing one-liner jokes about websites.
+You will receive a page title, URL, and whatever content is available.
+Write ONE sharp, funny sentence about this specific website — use the title, URL, content, or any combination.
+Even if content is minimal, the URL and title alone are enough for a great joke.
+Output only the joke. No intro, no explanation.`,
 
-  british: `You are a dry, deadpan British comedian roasting websites.
-Read the page content carefully. Find something specific — an actual claim, product, headline, phrase, or topic on this page — and write ONE politely devastating sentence about it.
-The joke must reference something real from the content. No generic "this website" jokes.
-Output only the joke. Nothing else.`,
+  british: `You are a dry, deadpan British comedian writing one-liner jokes about websites.
+You will receive a page title, URL, and whatever content is available.
+Write ONE politely devastating sentence about this specific website — use the title, URL, content, or any combination.
+Even if content is minimal, the URL and title alone are enough for a great joke.
+Output only the joke. No intro, no explanation.`,
 
-  philosopher: `You are a world-weary philosopher roasting websites.
-Read the page content carefully. Find something specific — an actual claim, product, headline, phrase, or topic on this page — and write ONE darkly funny existential observation about it.
-The joke must reference something real from the content. Reference a philosopher only if it fits naturally.
-Output only the joke. Nothing else.`,
+  philosopher: `You are a world-weary philosopher writing one-liner jokes about websites.
+You will receive a page title, URL, and whatever content is available.
+Write ONE darkly funny existential sentence about this specific website — use the title, URL, content, or any combination.
+Even if content is minimal, the URL and title alone are enough for a great joke.
+Output only the joke. No intro, no explanation.`,
 
-  boomer: `You are a confused Baby Boomer roasting websites.
-Read the page content carefully. Find something specific — an actual claim, product, service, or topic on this page — and write ONE baffled, old-fashioned joke about it.
-The joke must reference something real from the content. No generic "this website" jokes.
-Output only the joke. Nothing else.`,
+  boomer: `You are a confused Baby Boomer writing one-liner jokes about websites.
+You will receive a page title, URL, and whatever content is available.
+Write ONE baffled, old-fashioned sentence about this specific website — use the title, URL, content, or any combination.
+Even if content is minimal, the URL and title alone are enough for a great joke.
+Output only the joke. No intro, no explanation.`,
 };
 
 // ── State ─────────────────────────────────────────────────────────
@@ -172,6 +176,12 @@ async function doRoast() {
         systemInstruction: { parts: [{ text: SYSTEM_PROMPTS[roastStyle] ?? SYSTEM_PROMPTS.savage }] },
         contents: [{ parts: [{ text: userMsg }] }],
         generationConfig: { maxOutputTokens: 150 },
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+        ],
       }),
     });
 
@@ -181,7 +191,13 @@ async function doRoast() {
     }
 
     const data = await res.json();
-    lastRoast  = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+    console.log('[PageRoast] scraped length:', scraped.text.length, '| Gemini response:', JSON.stringify(data).slice(0, 300));
+
+    const blocked = data.promptFeedback?.blockReason;
+    if (blocked) throw new Error(`Blocked: ${blocked}`);
+
+    lastRoast = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+    if (!lastRoast) throw new Error('No response from model');
     showRoast(lastRoast, scraped.title);
 
   } catch (err) {
