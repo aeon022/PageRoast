@@ -118,25 +118,39 @@ async function doRoast() {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     [scraped]   = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: () => {
-        // Meta description
+      func: async () => {
+        const clean = s => (s || '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+
         const metaDesc = document.querySelector('meta[name="description"]')?.content
           || document.querySelector('meta[property="og:description"]')?.content
           || '';
 
-        // Get all visible text — innerText respects CSS, no filtering, let the model handle the noise
-        const bodyText = (document.body.innerText || document.body.textContent || '')
-          .replace(/[ \t]+/g, ' ')       // collapse horizontal whitespace
-          .replace(/\n{3,}/g, '\n\n')    // collapse excessive blank lines
-          .trim();
+        // Level 1: innerText — respects CSS, works for fully rendered pages
+        let bodyText = clean(document.body.innerText);
+
+        // Level 2: textContent with noise stripped — catches CSS-hidden content
+        if (bodyText.length < 400) {
+          const clone = document.body.cloneNode(true);
+          clone.querySelectorAll('script,style,noscript,svg,canvas').forEach(el => el.remove());
+          bodyText = clean(clone.textContent) || bodyText;
+        }
+
+        // Level 3: fetch the raw HTML and parse it — catches SPA shells where DOM is sparse
+        if (bodyText.length < 400) {
+          try {
+            const res  = await fetch(location.href);
+            const html = await res.text();
+            const doc  = new DOMParser().parseFromString(html, 'text/html');
+            doc.querySelectorAll('script,style,noscript').forEach(el => el.remove());
+            bodyText = clean(doc.body?.innerText || doc.body?.textContent) || bodyText;
+          } catch {}
+        }
 
         const combined = (metaDesc ? metaDesc + '\n\n' : '') + bodyText;
-        const text = combined.slice(0, 5000);
-
         return {
           title: document.title.trim(),
           url:   location.href,
-          text,
+          text:  combined.slice(0, 5000),
         };
       },
     });
