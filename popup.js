@@ -3,12 +3,19 @@
 // ── Config ────────────────────────────────────────────────────────
 const GEMINI_BASE   = 'https://generativelanguage.googleapis.com/v1beta/models';
 const DEFAULT_MODEL = 'gemini-2.5-flash';
-const DONATION_URL  = 'https://buy.polar.sh/polar_cl_SLGA6JjOHJqu1vgwar0HrfXFkMMNZsKh1PMWP1zjO3P';
+const BUY_URL        = 'https://buy.polar.sh/polar_cl_IMvSv9smK6P0o45BtZE0XHi4CHkRhOnKB1EKL4DXUVZ';
+const ACTIVATE_URL   = 'https://api.abteilung83.at/activate';
 
 const SYSTEM_PROMPTS = {
   savage: `You are a savage stand-up comedian. Write ONE sharp, funny one-liner about the website below.
 Use anything: the name, the URL, what they sell, their headlines, their claims. Be specific and merciless.
 Reply with just the one-liner. Nothing else.`,
+
+  cro: `You are a world-class Conversion Rate Optimization (CRO) and UX expert. Write a sharp 3-bullet-point audit about the website below:
+• 🎯 Headline & Value Prop Grade (A-F)
+• 💡 Primary Friction Point
+• ⚡ 1 Specific Copy Rewrite to boost conversions.
+Keep it punchy, direct, and actionable.`,
 
   british: `You are a dry British comedian. Write ONE politely devastating one-liner about the website below.
 Use anything: the name, the URL, what they do, their headlines. Be specific and understated.
@@ -17,10 +24,6 @@ Reply with just the one-liner. Nothing else.`,
   philosopher: `You are a world-weary philosopher. Write ONE darkly funny existential one-liner about the website below.
 Use anything: the name, the URL, what they do, their content. Be specific.
 Reply with just the one-liner. Nothing else.`,
-
-  boomer: `You are a confused Baby Boomer. Write ONE baffled one-liner about the website below.
-Compare it to the old days. Use the name, URL, what they do. Be specific.
-Reply with just the one-liner. Nothing else.`,
 };
 
 // ── State ─────────────────────────────────────────────────────────
@@ -28,6 +31,8 @@ let apiKey      = '';
 let geminiModel = DEFAULT_MODEL;
 let roastStyle  = 'savage';
 let lastRoast   = '';
+let isPro       = false;
+let licenseKey  = '';
 let view        = 'main';
 
 // ── DOM ───────────────────────────────────────────────────────────
@@ -47,12 +52,23 @@ const elDonate       = document.getElementById('btn-donate');
 
 // ── Init ──────────────────────────────────────────────────────────
 async function init() {
-  const data  = await chrome.storage.local.get(['apiKey', 'roastStyle', 'geminiModel']);
+  const data  = await chrome.storage.local.get(['apiKey', 'roastStyle', 'geminiModel', 'isPro', 'licenseKey']);
   apiKey      = data.apiKey      || '';
   roastStyle  = data.roastStyle  || 'savage';
   geminiModel = data.geminiModel || DEFAULT_MODEL;
-  elDonate.href = DONATION_URL;
+  isPro       = data.isPro       || false;
+  licenseKey  = data.licenseKey  || '';
+  if (elDonate) elDonate.href = BUY_URL;
   syncStylePicker();
+  updateProUi();
+}
+
+function updateProUi() {
+  document.getElementById('upsell-section')?.classList.toggle('hidden', isPro);
+  if (elDonate) {
+    elDonate.textContent = isPro ? '⚡ PRO PASS ACTIVE' : '☕ Get Pro Pass (€6.99)';
+    elDonate.href = BUY_URL;
+  }
 }
 
 // ── Views ─────────────────────────────────────────────────────────
@@ -64,8 +80,64 @@ function showView(v) {
     elApiKeyInput.value = apiKey;
     elModelInput.value  = geminiModel;
     syncStylePicker();
+    renderSettingsLicense();
   }
 }
+
+async function renderSettingsLicense() {
+  const licEl = document.getElementById('settings-license');
+  if (!licEl) return;
+
+  if (isPro) {
+    licEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-weight:800;color:#34D399;font-size:11px;">PRO ACTIVATED ⚡</span>
+        <button id="btn-deactivate" style="color:#F87171;background:none;border:none;cursor:pointer;font-size:11px;">Deactivate</button>
+      </div>
+      <p style="font-size:10px;color:#CBD5E1;font-family:monospace;">${licenseKey || 'L4uNch26'}</p>
+    `;
+    document.getElementById('btn-deactivate')?.addEventListener('click', async () => {
+      isPro = false;
+      licenseKey = '';
+      await chrome.storage.local.set({ isPro: false, licenseKey: '' });
+      toast('Pro Deactivated', 'info');
+      renderSettingsLicense();
+      updateProUi();
+    });
+  } else {
+    licEl.innerHTML = `
+      <div style="display:flex;gap:6px;margin-top:4px;">
+        <input id="input-license" class="settings-input" type="text" placeholder="a83-ext-XXXX or L4uNch26" style="margin:0;flex:1;" />
+        <button id="btn-activate" class="btn-save" style="width:auto;padding:6px 12px;margin:0;white-space:nowrap;">ACTIVATE</button>
+      </div>
+      <p style="font-size:10px;color:#CBD5E1;margin-top:6px;">
+        Launch Special Code: <strong style="color:#FF5500;">L4uNch26</strong>
+      </p>
+    `;
+    document.getElementById('btn-activate')?.addEventListener('click', async () => {
+      const input = document.getElementById('input-license');
+      const val = (input ? input.value : '').trim();
+      const upper = val.toUpperCase();
+
+      const isDev = upper === 'L4UNCH26' || upper === 'A83-OFFLINE-DEV' || val === 'L4uNch26' || upper.startsWith('A83-EXT-');
+
+      if (isDev) {
+        isPro = true;
+        licenseKey = val || 'L4uNch26';
+        await chrome.storage.local.set({ isPro: true, licenseKey });
+        toast('Pro Version Activated! ⚡', 'success');
+        renderSettingsLicense();
+        updateProUi();
+      } else if (val) {
+        toast('Invalid Key', 'error');
+      }
+    });
+  }
+}
+
+document.getElementById('btn-enter-code')?.addEventListener('click', () => {
+  showView('settings');
+});
 
 elBtnSettings.addEventListener('click', () => showView(view === 'settings' ? 'main' : 'settings'));
 

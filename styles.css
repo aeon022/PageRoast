@@ -1,27 +1,58 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:        #0f0f0f;
-  --bg2:       #1a1a1a;
-  --bg3:       #242424;
-  --accent:    #ff3c3c;
-  --accent2:   #ff7c3c;
-  --text:      #f0f0f0;
-  --text-muted:#888;
-  --radius:    8px;
-  --font:      -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --bg:         #0D080B;
+  --bg2:        #1A1014;
+  --bg3:        #29181F;
+  --accent:     #FF5500;
+  --accent2:    #FF8800;
+  --accent-pink:#F472B6;
+  --text:       #FFFFFF;
+  --text-muted: #CBD5E1;
+  --radius:     10px;
+  --radius-sm:  6px;
+  --font:       -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
+}
+
+html, body {
+  width: 360px !important;
+  min-width: 360px !important;
+  max-width: 360px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+  background: #0D080B;
+}
+
+#app {
+  width: 360px !important;
+  min-width: 360px !important;
+  max-width: 360px !important;
+  display: flex;
+  flex-direction: column;
 }
 
 body {
-  width: 340px;
-  min-height: 200px;
-  background: var(--bg);
+  background: radial-gradient(circle at 50% 0%, #3B1616 0%, #0D080B 100%);
   color: var(--text);
   font-family: var(--font);
   font-size: 13px;
+  line-height: 1.45;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-#app { display: flex; flex-direction: column; }
+.version-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  background: rgba(255, 85, 0, 0.15);
+  border: 1px solid rgba(255, 85, 0, 0.4);
+  color: var(--accent);
+  border-radius: 10px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
 
 /* ── Header ─────────────────────────────────────────────── */
 .header {
@@ -29,7 +60,9 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px 10px;
-  border-bottom: 1px solid #222;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(13, 8, 11, 0.8);
+  backdrop-filter: blur(12px);
 }
 
 .header__logo {
@@ -41,9 +74,9 @@ body {
 .header__flame { font-size: 16px; }
 
 .header__title {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   background: linear-gradient(90deg, var(--accent), var(--accent2));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -154,15 +187,65 @@ body {
 .btn-secondary:hover { background: #2e2e2e; }
 
 /* ── Donate ──────────────────────────────────────────────── */
+/* ── Upsell Card ─────────────────────────────────────────── */
+.upsell-card {
+  margin: 10px 14px 4px;
+  padding: 12px;
+  background: rgba(41, 24, 31, 0.75);
+  border: 1px solid rgba(255, 85, 0, 0.4);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+}
+
+.upsell-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.upsell-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  background: rgba(244, 114, 182, 0.2);
+  border: 1px solid var(--accent-pink);
+  color: var(--accent-pink);
+  border-radius: 10px;
+}
+
+.upsell-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.btn-primary-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #FF5500 0%, #E63900 50%, #B30000 100%);
+  color: #FFFFFF !important;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(255, 85, 0, 0.35);
+  transition: all 0.15s;
+}
+.btn-primary-link:hover { opacity: 0.92; transform: translateY(-1px); }
+
 .btn-donate {
   display: block;
-  width: 100%;
-  padding: 9px;
-  background: var(--bg3);
+  margin: 10px 14px 14px;
+  padding: 8px;
   border: 1px solid #333;
   border-radius: var(--radius);
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-align: center;
   text-decoration: none;
