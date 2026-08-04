@@ -167,7 +167,7 @@ async function doRoast() {
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: promptText }] },
           contents: [{ parts: [{ text: userMsg }] }],
-          generationConfig: { maxOutputTokens: 250, temperature: 0.8 },
+          generationConfig: { maxOutputTokens: 800, temperature: 0.8 },
           safetySettings: [
             { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' },
             { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_NONE' },
