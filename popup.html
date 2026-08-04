@@ -28,7 +28,7 @@
     <div id="view-main">
       <div class="roast-stage">
         <div id="roast-output" class="roast-output roast-output--empty">
-          <span class="roast-placeholder">Click 🔥 ROAST THIS PAGE to generate an instant AI conversion roast.</span>
+          <span class="roast-placeholder">Click 🔥 ROAST THIS PAGE to generate an instant AI roast.</span>
         </div>
         <div id="roast-meta" class="roast-meta hidden"></div>
       </div>
@@ -40,21 +40,6 @@
           <button class="btn-secondary" id="btn-again">🔄 Roast Again</button>
         </div>
       </div>
-
-      <!-- Pro Upsell Card -->
-      <div id="upsell-section" class="upsell-card hidden">
-        <div class="upsell-title">
-          <span>Upgrade to Pro Pass</span>
-          <span class="upsell-badge">CODE: L4uNch26</span>
-        </div>
-        <p class="upsell-desc">Unlimited roasts, CRO scorecards &amp; expert recommendations.</p>
-        <div style="display:flex;gap:6px;align-items:center;margin-top:8px;">
-          <a class="btn-primary-link" id="btn-buy-pro" href="https://buy.polar.sh/polar_cl_IMvSv9smK6P0o45BtZE0XHi4CHkRhOnKB1EKL4DXUVZ" target="_blank" style="flex:1;text-align:center;text-decoration:none;">Get Pro — €6.99</a>
-          <button class="btn-secondary" id="btn-enter-code" style="padding:8px 10px;white-space:nowrap;font-size:11px;color:var(--accent);">🔑 Use Code</button>
-        </div>
-      </div>
-
-      <a id="btn-donate" href="https://buy.polar.sh/polar_cl_IMvSv9smK6P0o45BtZE0XHi4CHkRhOnKB1EKL4DXUVZ" target="_blank" class="btn-donate">☕ Get Pro Pass (€6.99)</a>
     </div>
 
     <!-- Settings view -->
@@ -72,8 +57,8 @@
       <div class="settings-section">
         <label class="settings-label" for="input-model">GEMINI MODEL</label>
         <input class="settings-input" id="input-model" type="text"
-          placeholder="gemini-2.5-flash" autocomplete="off" spellcheck="false" />
-        <p class="settings-hint">Default: <code>gemini-2.5-flash</code></p>
+          placeholder="gemini-1.5-flash" autocomplete="off" spellcheck="false" />
+        <p class="settings-hint">Default: <code>gemini-1.5-flash</code></p>
       </div>
 
       <div class="settings-section">
@@ -84,11 +69,6 @@
           <button class="style-btn" data-style="british">☕ British</button>
           <button class="style-btn" data-style="philosopher">🏛️ Philosopher</button>
         </div>
-      </div>
-
-      <div class="settings-section">
-        <label class="settings-label">LICENSE KEY (PRO)</label>
-        <div id="settings-license"></div>
       </div>
 
       <button class="btn-save" id="btn-save-settings">Save Settings</button>
