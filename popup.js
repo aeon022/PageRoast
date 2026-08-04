@@ -2,19 +2,20 @@
 
 // ── Config ────────────────────────────────────────────────────────
 const GEMINI_BASE   = 'https://generativelanguage.googleapis.com/v1beta/models';
-const DEFAULT_MODEL = 'gemini-2.5-flash';
+const DEFAULT_MODEL = 'gemini-1.5-flash';
+const FALLBACK_MODELS = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
 const BUY_URL        = 'https://buy.polar.sh/polar_cl_IMvSv9smK6P0o45BtZE0XHi4CHkRhOnKB1EKL4DXUVZ';
 const ACTIVATE_URL   = 'https://api.abteilung83.at/activate';
 
 const SYSTEM_PROMPTS = {
-  savage: `You are a savage stand-up comedian. Write ONE sharp, funny one-liner about the website below.
-Use anything: the name, the URL, what they sell, their headlines, their claims. Be specific and merciless.
-Reply with just the one-liner. Nothing else.`,
+  savage: `You are a savage stand-up comedian. Write ONE sharp, funny, creative one-liner roasting the website or article below.
+Use anything: the title, URL, headline, or content. Be specific and hilarious.
+Reply with just the roast one-liner. Nothing else.`,
 
-  cro: `You are a world-class Conversion Rate Optimization (CRO) and UX expert. Write a sharp 3-bullet-point audit about the website below:
+  cro: `You are a world-class Conversion Rate Optimization (CRO) and UX expert. Write a sharp 3-bullet-point audit about the website or article below:
 • 🎯 Headline & Value Prop Grade (A-F)
-• 💡 Primary Friction Point
-• ⚡ 1 Specific Copy Rewrite to boost conversions.
+• 💡 Primary Friction / Readability Point
+• ⚡ 1 Specific Fix / Copy Rewrite to improve engagement.
 Keep it punchy, direct, and actionable.`,
 
   british: `You are a dry British comedian. Write ONE politely devastating one-liner about the website below.
@@ -226,54 +227,56 @@ async function doRoast() {
     return;
   }
 
-  // Build prompt — even title + URL alone is enough for a joke
-  const userMsg = `Website: ${scraped.title}\nURL: ${scraped.url}\n\n${scraped.text}`.trim();
+  // Build prompt
+  const userMsg = `Website Title: ${scraped.title}\nURL: ${scraped.url}\n\nContent:\n${scraped.text}`.trim();
+  const promptText = SYSTEM_PROMPTS[roastStyle] || SYSTEM_PROMPTS.savage;
 
-  try {
-    const res = await fetch(`${GEMINI_BASE}/${geminiModel}:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPTS[roastStyle] }] },
-        contents: [{ parts: [{ text: userMsg }] }],
-        generationConfig: { maxOutputTokens: 150 },
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
-        ],
-      }),
-    });
+  const modelsToTry = [geminiModel, ...FALLBACK_MODELS.filter(m => m !== geminiModel)];
+  let lastError = null;
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message ?? `HTTP ${res.status}`);
+  for (const model of modelsToTry) {
+    try {
+      const res = await fetch(`${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: promptText }] },
+          contents: [{ parts: [{ text: userMsg }] }],
+          generationConfig: { maxOutputTokens: 250, temperature: 0.8 },
+          safetySettings: [
+            { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+          ],
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message ?? `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const candidate = data.candidates?.[0];
+      const text = candidate?.content?.parts?.[0]?.text?.trim();
+
+      if (text) {
+        lastRoast = text;
+        showRoast(lastRoast, scraped.title);
+        return;
+      }
+
+      if (candidate?.finishReason) {
+        throw new Error(`Gemini status: ${candidate.finishReason}`);
+      }
+    } catch (err) {
+      lastError = err;
     }
-
-    const data = await res.json();
-
-    // Detect safety block
-    if (data.promptFeedback?.blockReason) {
-      throw new Error(`Blocked: ${data.promptFeedback.blockReason}`);
-    }
-
-    // Detect empty candidate (e.g. finishReason: SAFETY)
-    const candidate = data.candidates?.[0];
-    if (!candidate?.content) {
-      const reason = candidate?.finishReason || 'unknown';
-      throw new Error(`No output (${reason})`);
-    }
-
-    lastRoast = candidate.content.parts?.[0]?.text?.trim() ?? '';
-    if (!lastRoast) throw new Error('Empty response');
-
-    showRoast(lastRoast, scraped.title);
-
-  } catch (err) {
-    setLoading(false);
-    toast(err.message.slice(0, 70), 'error');
   }
+
+  setLoading(false);
+  toast(lastError?.message?.slice(0, 70) || 'Failed to generate roast', 'error');
 }
 
 function showRoast(text, pageTitle) {
