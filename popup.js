@@ -79,15 +79,16 @@ elBtnSave.addEventListener('click', async () => {
 
 // ── Style picker ──────────────────────────────────────────────────
 function syncStylePicker() {
-  document.querySelectorAll('.style-btn').forEach(btn =>
+  document.querySelectorAll('.style-tab, .style-btn').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.style === roastStyle));
 }
 
-document.getElementById('style-picker').addEventListener('click', e => {
-  const btn = e.target.closest('.style-btn');
+document.getElementById('style-tabs')?.addEventListener('click', async e => {
+  const btn = e.target.closest('.style-tab');
   if (!btn) return;
   roastStyle = btn.dataset.style;
   syncStylePicker();
+  await chrome.storage.local.set({ roastStyle });
 });
 
 // ── Scrape ────────────────────────────────────────────────────────

@@ -17,24 +17,39 @@
         <span class="version-badge">v1.0</span>
       </div>
       <button class="btn-icon" id="btn-settings" title="Settings">
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-          <circle cx="7.5" cy="7.5" r="2" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M7.5 1v1.5M7.5 12.5V14M1 7.5h1.5M12.5 7.5H14M2.6 2.6l1.1 1.1M11.3 11.3l1.1 1.1M2.6 12.4l1.1-1.1M11.3 3.7l1.1-1.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
       </button>
     </header>
 
     <!-- Main view -->
     <div id="view-main">
-      <div class="roast-stage">
-        <div id="roast-output" class="roast-output roast-output--empty">
-          <span class="roast-placeholder">Click 🔥 ROAST THIS PAGE to generate an instant AI roast.</span>
-        </div>
-        <div id="roast-meta" class="roast-meta hidden"></div>
+      <!-- Style Selector Bar -->
+      <div class="style-tabs" id="style-tabs">
+        <button class="style-tab active" data-style="savage">🔥 Savage</button>
+        <button class="style-tab" data-style="cro">📈 CRO Audit</button>
+        <button class="style-tab" data-style="british">☕ British</button>
+        <button class="style-tab" data-style="philosopher">🏛️ Philosopher</button>
       </div>
 
+      <!-- Roast Stage -->
+      <div class="roast-stage">
+        <div class="roast-card">
+          <div id="roast-output" class="roast-output roast-output--empty">
+            <span class="roast-placeholder">Click <strong>🔥 ROAST THIS PAGE</strong> to analyze this site.</span>
+          </div>
+          <div id="roast-meta" class="roast-meta hidden"></div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
       <div class="actions">
-        <button class="btn-roast" id="btn-roast">🔥 ROAST THIS PAGE</button>
+        <button class="btn-roast" id="btn-roast">
+          <span class="btn-roast__icon">🔥</span>
+          <span class="btn-roast__text">ROAST THIS PAGE</span>
+        </button>
         <div class="action-row hidden" id="action-row">
           <button class="btn-secondary" id="btn-copy">📋 Copy Roast</button>
           <button class="btn-secondary" id="btn-again">🔄 Roast Again</button>
@@ -49,7 +64,7 @@
         <input class="settings-input" id="input-apikey" type="password"
           placeholder="AIza..." autocomplete="off" spellcheck="false" />
         <p class="settings-hint">
-          Free at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com</a> — just sign in with Google.
+          Get your free API key at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com</a>.
           Stored locally on device.
         </p>
       </div>
@@ -58,17 +73,7 @@
         <label class="settings-label" for="input-model">GEMINI MODEL</label>
         <input class="settings-input" id="input-model" type="text"
           placeholder="gemini-1.5-flash" autocomplete="off" spellcheck="false" />
-        <p class="settings-hint">Default: <code>gemini-1.5-flash</code></p>
-      </div>
-
-      <div class="settings-section">
-        <label class="settings-label">ROAST STYLE</label>
-        <div class="style-picker" id="style-picker">
-          <button class="style-btn active" data-style="savage">🔥 Savage</button>
-          <button class="style-btn" data-style="cro">📈 CRO Expert</button>
-          <button class="style-btn" data-style="british">☕ British</button>
-          <button class="style-btn" data-style="philosopher">🏛️ Philosopher</button>
-        </div>
+        <p class="settings-hint">Default model: <code>gemini-1.5-flash</code></p>
       </div>
 
       <button class="btn-save" id="btn-save-settings">Save Settings</button>
