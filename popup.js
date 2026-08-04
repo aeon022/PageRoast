@@ -6,23 +6,23 @@ const DEFAULT_MODEL = 'gemini-1.5-flash';
 const FALLBACK_MODELS = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
 
 const SYSTEM_PROMPTS = {
-  savage: `You are a savage stand-up comedian. Write ONE sharp, funny, creative one-liner roasting the website or article below.
+  savage: `You are a savage stand-up comedian. Write a sharp, funny, creative roast about the website or article below.
 Use anything: the title, URL, headline, or content. Be specific and hilarious.
-Reply with just the roast one-liner. Nothing else.`,
+CRITICAL INSTRUCTION: You MUST complete every sentence fully and end with proper punctuation (. ! or ?). Never leave an unfinished sentence.`,
 
   cro: `You are a world-class Conversion Rate Optimization (CRO) and UX expert. Write a sharp 3-bullet-point audit about the website or article below:
 • 🎯 Headline & Value Prop Grade (A-F)
 • 💡 Primary Friction / Readability Point
 • ⚡ 1 Specific Fix / Copy Rewrite to improve engagement.
-Keep it punchy, direct, and actionable.`,
+CRITICAL INSTRUCTION: You MUST complete every sentence fully and end with proper punctuation (. ! or ?). Never leave an unfinished sentence.`,
 
-  british: `You are a dry British comedian. Write ONE politely devastating one-liner about the website below.
+  british: `You are a dry British comedian. Write a politely devastating one-liner or short paragraph about the website below.
 Use anything: the name, the URL, what they do, their headlines. Be specific and understated.
-Reply with just the one-liner. Nothing else.`,
+CRITICAL INSTRUCTION: You MUST complete every sentence fully and end with proper punctuation (. ! or ?). Never leave an unfinished sentence.`,
 
-  philosopher: `You are a world-weary philosopher. Write ONE darkly funny existential one-liner about the website below.
+  philosopher: `You are a world-weary philosopher. Write a darkly funny existential roast about the website below.
 Use anything: the name, the URL, what they do, their content. Be specific.
-Reply with just the one-liner. Nothing else.`,
+CRITICAL INSTRUCTION: You MUST complete every sentence fully and end with proper punctuation (. ! or ?). Never leave an unfinished sentence.`,
 };
 
 // ── State ─────────────────────────────────────────────────────────
@@ -167,7 +167,7 @@ async function doRoast() {
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: promptText }] },
           contents: [{ parts: [{ text: userMsg }] }],
-          generationConfig: { maxOutputTokens: 800, temperature: 0.8 },
+          generationConfig: { maxOutputTokens: 2000, temperature: 0.7 },
           safetySettings: [
             { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' },
             { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_NONE' },
@@ -187,7 +187,7 @@ async function doRoast() {
       const text = candidate?.content?.parts?.[0]?.text?.trim();
 
       if (text) {
-        lastRoast = text;
+        lastRoast = ensureCompleteSentence(text);
         showRoast(lastRoast, scraped.title);
         return;
       }
@@ -202,6 +202,27 @@ async function doRoast() {
 
   setLoading(false);
   toast(lastError?.message?.slice(0, 70) || 'Failed to generate roast', 'error');
+}
+
+function ensureCompleteSentence(text) {
+  if (!text) return '';
+  const trimmed = text.trim();
+
+  // If text ends cleanly with punctuation or quote mark, return as is
+  if (/[.!?”"]$/.test(trimmed)) return trimmed;
+
+  // Find last valid sentence-ending punctuation
+  const lastIndex = Math.max(
+    trimmed.lastIndexOf('.'),
+    trimmed.lastIndexOf('!'),
+    trimmed.lastIndexOf('?')
+  );
+
+  if (lastIndex > 20) {
+    return trimmed.slice(0, lastIndex + 1);
+  }
+
+  return trimmed + '.';
 }
 
 function showRoast(text, pageTitle) {
