@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PageRoast</title>
+  <title>PageScorch</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -13,13 +13,13 @@
     <header class="header">
       <div class="header__logo">
         <span class="header__flame">🔥</span>
-        <span class="header__title">PAGEROAST</span>
+        <span class="header__title">PAGESCORCH</span>
         <span class="version-badge">v1.0</span>
       </div>
       <button class="btn-icon" id="btn-settings" title="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
       </button>
     </header>
@@ -38,7 +38,7 @@
       <div class="roast-stage">
         <div class="roast-card">
           <div id="roast-output" class="roast-output roast-output--empty">
-            <span class="roast-placeholder">Click <strong>🔥 ROAST THIS PAGE</strong> to analyze this site.</span>
+            <span class="roast-placeholder">Click <strong>🔥 SCORCH THIS PAGE</strong> to analyze this site.</span>
           </div>
           <div id="roast-meta" class="roast-meta hidden"></div>
         </div>
@@ -48,13 +48,24 @@
       <div class="actions">
         <button class="btn-roast" id="btn-roast">
           <span class="btn-roast__icon">🔥</span>
-          <span class="btn-roast__text">ROAST THIS PAGE</span>
+          <span class="btn-roast__text">SCORCH THIS PAGE</span>
         </button>
         <div class="action-row hidden" id="action-row">
-          <button class="btn-secondary" id="btn-copy">📋 Copy Roast</button>
-          <button class="btn-secondary" id="btn-again">🔄 Roast Again</button>
+          <button class="btn-secondary" id="btn-copy">📋 Copy Critique</button>
+          <button class="btn-secondary" id="btn-again">🔄 Scorch Again</button>
         </div>
       </div>
+
+      <!-- 100% Free + Spenden / Support Banner -->
+      <div class="support-card">
+        <div class="support-header">
+          <span class="support-title">☕ 100% Free &amp; Open Tool</span>
+          <span class="support-badge">TIP JAR</span>
+        </div>
+        <p class="support-desc">PageScorch is completely free! If it brought a smile to your face, support the developer with a coffee or tip on Polar.</p>
+        <a class="btn-support-link" href="https://buy.polar.sh/polar_cl_j0vr7vVByHYnfg756OvKjvV8gG1YlznmRjydz1VGS7R" target="_blank">☕ Support Developer — €3 / €5</a>
+      </div>
+
     </div>
 
     <!-- Settings view -->

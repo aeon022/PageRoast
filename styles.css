@@ -310,6 +310,51 @@ body {
   transform: translateY(-1px);
 }
 
+/* ── Support Card / Tip Jar ───────────────────────────── */
+.support-card {
+  margin: 0 14px 14px;
+  padding: 12px;
+  background: rgba(35, 18, 25, 0.7);
+  border: 1px solid rgba(255, 107, 0, 0.35);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(16px);
+}
+
+.support-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.support-title { font-size: 12px; font-weight: 800; color: var(--text-main); }
+.support-badge {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 7px;
+  background: rgba(255, 107, 0, 0.18);
+  border: 1px solid var(--accent-orange);
+  color: var(--accent-orange);
+  border-radius: 12px;
+  font-family: var(--font-mono);
+}
+.support-desc { font-size: 10.5px; color: var(--text-muted); line-height: 1.4; margin-bottom: 10px; }
+
+.btn-support-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #FF6B00 0%, #FF2E00 100%);
+  color: #FFFFFF !important;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.btn-support-link:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 107, 0, 0.4); }
+
 /* ── Settings View ───────────────────────────────────────── */
 #view-settings {
   padding: 14px;

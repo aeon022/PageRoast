@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "PageRoast",
-  "description": "Let AI roast any webpage. One click, instant comedy.",
+  "name": "PageScorch",
+  "description": "Let AI scorch any webpage. One click, instant brutalist UX critique.",
   "version": "1.0.0",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["https://generativelanguage.googleapis.com/*"],
